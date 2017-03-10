@@ -9,7 +9,6 @@ class QuotesSpider(scrapy.Spider):
         'http://quotes.toscrape.com/page/2/',
     ]
 
-
     def parse(self, response):
         page = response.url.split("/")[-2]
         filename = 'quotes-%s.html' % page

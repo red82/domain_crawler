@@ -5,10 +5,27 @@
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/items.html
 
-import scrapy
+from scrapy import Item, Field
 
 
-class SpiderItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class DomainItem(Item):
+    domain = Field()
+    words_in_domainname = Field()
+    title = Field()
+    date_creation = Field()
+    web_age = Field()
+    ip_address = Field()
+    ip_geolocation = Field()
+
+
+class WhoisItem(Item):
+    domain = Field()
+    nserver = Field()
+    state = Field()
+    org = Field()
+    registrar = Field()
+    admin_contact = Field()
+    created = Field()
+    paid_till = Field()
+    free_date = Field()
+    source = Field()

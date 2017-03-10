@@ -1,34 +1,52 @@
-# -*- coding:utf8 -*-
-
-
+ # -*- coding:utf8 -*-
+from spider.items import DomainItem, WhoisItem
+# from scrapy.utils.response import open_in_browser
 import scrapy
 
 
 class DomainsSpider(scrapy.Spider):
-    name = "domains"
-
-    start_urls = ['https://trends.builtwith.com/media/video-players']
+    name = 'domain_spider'
+    allowed_domains = ['domainbigdata.com']
+    start_urls = ['http://domainbigdata.com/']
 
     def parse(self, response):
-        filename = 'domains.html'
+        url = ''.join([self.start_urls[0], 'ya.ru'])
+        return [scrapy.Request(url=url, method='GET', callback=self.after_get)]
 
-        domains_table = response.css("table.table")[0]
-        links = domains_table.css("tbody tr td a::attr(href)").extract()
+    def after_get(self, response):
+        dom_item = DomainItem()
+        who_item = WhoisItem()
 
-        with open(filename, 'wb') as f:
-            f.write('\n'.join(links))
+        data = response.xpath('//table[@class="websiteglobalstats em-td2 trhov"]')
 
-        #follow for href domain links
-        for link in links:
-            yield scrapy.Request(response.urljoin(link),
-                                 callback=self.parse_domain)
+        dom_item['domain'] = data.xpath('//tr[@id="tr1"]/td[2]/text()').extract()[0]
+        dom_item['words_in_domainname'] = data.xpath('//tr[@id="trWordsInDomainName"]/td[2]/text()').extract()[0]
+        dom_item['title'] = data.xpath('//tr[@id="trTitle"]/td[2]/text()').extract()[0]
+        dom_item['date_creation'] = data.xpath('//tr[@id="trDateCreation"]/td[2]/text()').extract()[0]
+        dom_item['web_age'] = data.xpath('//tr[@id="trWebAge"]/td[2]/text()').extract()[0]
+        dom_item['ip_address'] = data.xpath('//tr[@id="trIP"]/td[2]/a/text()').extract()[0]
 
-    def parse_domain(self, response):
-        def extract_with_css(query):
-            return response.css(query).extract_first().strip()
+        dom_item['ip_geolocation'] = data.xpath('//tr[@id="trIPGeolocation"]/td[2]/img/@alt').extract()[0]
 
-        yield {
-            'name': extract_with_css('h3.author-title::text'),
-            'birthdate': extract_with_css('.author-born-date::text'),
-            'bio': extract_with_css('.author-description::text'),
-            }
+        data = response.xpath('//div[@class="col-md-12 pd5"]')
+
+        who_item['domain'] = data.re(r'domain:\s*([A-Za-z0-9-]+)')[0]
+        nserver = [d[:-1] for d in data.re(r'nserver:\s*([A-Za-z0-9-.]+)')]
+        who_item['nserver'] = ', '.join(nserver)
+        state = data.re('state:\s*([\w\s,]*)<br>')
+        who_item['state'] = ', '.join(state)
+        org = data.re('org:\s*([\w\s,.]*)<br>')
+        who_item['org'] = ', '.join(org)
+        who_item['registrar'] = data.re('registrar:\s*([-a-zA-Z0-9]+)')[0]
+        who_item['admin_contact'] = data.re('admin-contact:\s*(.*?)<br>')[0]
+        who_item['created'] = data.re('created:\s*(\d{2,4}\.\d{2,4}\.\d{2,4})<br>')[0]
+        who_item['paid_till'] = data.re('paid-till:\s*(\d{2,4}\.\d{2,4}\.\d{2,4})<br>')[0]
+        who_item['free_date'] = data.re('free-date:\s*(\d{2,4}\.\d{2,4}\.\d{2,4})<br>')[0]
+        who_item['source'] = data.re('source:\s*(\w+)<br>')[0]
+
+        item = dict()
+        item['dom_item'] = dom_item
+        item['who_item'] = who_item
+
+        yield item
+
