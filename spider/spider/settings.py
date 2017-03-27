@@ -68,6 +68,8 @@ ITEM_PIPELINES = {
    'spider.pipelines.SpiderPipeline': 300,
 }
 
+URL_WEBUI = u'localhost:5000'
+
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True

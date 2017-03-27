@@ -45,8 +45,32 @@ class DomainTable(Base):
                                               self.ip_geolocation)
 
 
-class WhoisTable(Base):
-    __tablename__ = 'whois'
+class RegistrantTable(Base):
+    __tablename__ = 'registrant'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    organization = Column(String)
+    email = Column(String)
+    country = Column(String)
+    private = Column(String)
+
+    def __init__(self, name, organization, email, country, private):
+        self.name = name
+        self.organization = organization
+        self.email = email
+        self.country = country
+        self.private = private
+
+    def __repr__(self):
+        return 'Data %s %s %s %s %s' % (self.name,
+                                        self.organization,
+                                        self.email,
+                                        self.country,
+                                        self.private)
+
+
+class Whois1Table(Base):
+    __tablename__ = 'whois1'
     id = Column(Integer, primary_key=True)
     domain = Column(String)
     nserver = Column(String)
@@ -84,9 +108,198 @@ class WhoisTable(Base):
                                                        self.source)
 
 
+class Whois2Table(Base):
+    __tablename__ = 'whois2'
+    id = Column(Integer, primary_key=True)
+    domain_name = Column(String)
+    registry_domain_id = Column(String)
+    registrar_whois_server = Column(String)
+    registrar_url = Column(String)
+    updated_date = Column(String)
+    creation_date = Column(String)
+    registrar_registration_expiration_date = Column(String)
+    registrar = Column(String)
+    registrar_iana_id = Column(String)
+    registrar_abuse_contact_email = Column(String)
+    registrar_abuse_contact_phone = Column(String)
+    domain_status = Column(String)
+    registry_registrant_id = Column(String)
+    registrant_name = Column(String)
+    registrant_organization = Column(String)
+    registrant_street = Column(String)
+    registrant_city = Column(String)
+    registrant_stateprovince = Column(String)
+    registrant_postal_code = Column(String)
+    registrant_country = Column(String)
+    registrant_phone = Column(String)
+    registrant_phone_ext = Column(String)
+    registrant_fax = Column(String)
+    registrant_fax_ext = Column(String)
+    registrant_email = Column(String)
+    registry_admin_id = Column(String)
+    admin_name = Column(String)
+    admin_organization = Column(String)
+    admin_street = Column(String)
+    admin_city = Column(String)
+    admin_stateprovince = Column(String)
+    admin_postal_code = Column(String)
+    admin_country = Column(String)
+    admin_phone = Column(String)
+    admin_phone_ext = Column(String)
+    admin_fax = Column(String)
+    admin_fax_ext = Column(String)
+    admin_email = Column(String)
+    registry_tech_id = Column(String)
+    tech_name = Column(String)
+    tech_organization = Column(String)
+    tech_street = Column(String)
+    tech_city = Column(String)
+    tech_stateprovince = Column(String)
+    tech_postal_code = Column(String)
+    tech_country = Column(String)
+    tech_phone = Column(String)
+    tech_phone_ext = Column(String)
+    tech_fax = Column(String)
+    tech_fax_ext = Column(String)
+    tech_email = Column(String)
+    name_server = Column(String)
+    dnssec = Column(String)
+
+    def __init__(self, domain_name, registry_domain_id, registrar_whois_server,
+                 registrar_url, updated_date, creation_date,
+                 registrar_registration_expiration_date, registrar,
+                 registrar_iana_id, registrar_abuse_contact_email,
+                 registrar_abuse_contact_phone, domain_status,
+                 registry_registrant_id, registrant_name,
+                 registrant_organization, registrant_street,
+                 registrant_city, registrant_stateprovince,
+                 registrant_postal_code, registrant_country,
+                 registrant_phone, registrant_phone_ext,
+                 registrant_fax, registrant_fax_ext, registrant_email,
+                 registry_admin_id, admin_name, admin_organization,
+                 admin_street, admin_city, admin_stateprovince,
+                 admin_postal_code, admin_country, admin_phone,
+                 admin_phone_ext, admin_fax, admin_fax_ext, admin_email,
+                 registry_tech_id, tech_name, tech_organization, tech_street,
+                 tech_citytech_stateprovince, tech_postal_code, tech_country,
+                 tech_phone, tech_phone_ext, tech_fax, tech_fax_ext,
+                 tech_email, name_server, dnssec):
+        self.domain_name = domain_name
+        self.registry_domain_id = registry_domain_id
+        self.registrar_whois_server = registrar_whois_server
+        self.registrar_url = registrar_url
+        self.updated_date = updated_date
+        self.creation_date = creation_date
+        self.registrar_registration_expiration_date = \
+            registrar_registration_expiration_date
+        self.registrar = registrar
+        self.registrar_iana_id = registrar_iana_id
+        self.registrar_abuse_contact_email = registrar_abuse_contact_email
+        self.registrar_abuse_contact_phone = registrar_abuse_contact_phone
+        self.domain_status = domain_status
+        self.registry_registrant_id = registry_registrant_id
+        self.registrant_name = registrant_name
+        self.registrant_organization = registrant_organization
+        self.registrant_street = registrant_street
+        self.registrant_city = registrant_city
+        self.registrant_stateprovince = registrant_stateprovince
+        self.registrant_postal_code = registrant_postal_code
+        self.registrant_country = registrant_country
+        self.registrant_phone = registrant_phone
+        self.registrant_phone_ext = registrant_phone_ext
+        self.registrant_fax = registrant_fax
+        self.registrant_fax_ext = registrant_fax_ext
+        self.registrant_email = registrant_email
+        self.registry_admin_id = registry_admin_id
+        self.admin_name = admin_name
+        self.admin_organization = admin_organization
+        self.admin_street = admin_street
+        self.admin_city = admin_city
+        self.admin_stateprovince = admin_stateprovince
+        self.admin_postal_code = admin_postal_code
+        self.admin_country = admin_country
+        self.admin_phone = admin_phone
+        self.admin_phone_ext = admin_phone_ext
+        self.admin_fax = admin_fax
+        self.admin_fax_ext = admin_fax_ext
+        self.admin_email = admin_email
+        self.registry_tech_id = registry_tech_id
+        self.tech_name = tech_name
+        self.tech_organization = tech_organization
+        self.tech_street = tech_street
+        self.tech_citytech_stateprovince = tech_citytech_stateprovince
+        self.tech_postal_code = tech_postal_code
+        self.tech_country = tech_country
+        self.tech_phone = tech_phone
+        self.tech_phone_ext = tech_phone_ext
+        self.tech_fax = tech_fax
+        self.tech_fax_ext = tech_fax_ext
+        self.tech_email = tech_email
+        self.name_server = name_server
+        self.dnssec = dnssec
+
+    def __repr__(self):
+        return 'Data %s %s %s %s %s %s %s %s %s %s ' \
+               '%s %s %s %s %s %s %s %s %s %s' \
+               '%s %s %s %s %s %s %s %s %s %s' \
+               '%s %s %s %s %s %s %s %s %s %s' \
+               '%s %s %s %s %s %s %s %s %s %s' % (self.domain_name,
+                                                  self.registry_domain_id,
+                                                  self.registrar_whois_server,
+                                                  self.registrar_url,
+                                                  self.updated_date,
+                                                  self.creation_date,
+                                                  self.registrar_registration_expiration_date,
+                                                  self.registrar,
+                                                  self.registrar_iana_id,
+                                                  self.registrar_abuse_contact_email,
+                                                  self.registrar_abuse_contact_phone,
+                                                  self.domain_status,
+                                                  self.registry_registrant_id,
+                                                  self.registrant_name,
+                                                  self.registrant_organization,
+                                                  self.registrant_street,
+                                                  self.registrant_city,
+                                                  self.registrant_stateprovince,
+                                                  self.registrant_postal_code,
+                                                  self.registrant_country,
+                                                  self.registrant_phone,
+                                                  self.registrant_phone_ext,
+                                                  self.registrant_fax,
+                                                  self.registrant_fax_ext,
+                                                  self.registrant_email,
+                                                  self.registry_admin_id,
+                                                  self.admin_name,
+                                                  self.admin_organization,
+                                                  self.admin_street,
+                                                  self.admin_city,
+                                                  self.admin_stateprovince,
+                                                  self.admin_postal_code,
+                                                  self.admin_country,
+                                                  self.admin_phone,
+                                                  self.admin_phone_ext,
+                                                  self.admin_fax,
+                                                  self.admin_fax_ext,
+                                                  self.admin_email,
+                                                  self.registry_tech_id,
+                                                  self.tech_name,
+                                                  self.tech_organization,
+                                                  self.tech_street,
+                                                  self.tech_city,
+                                                  self.tech_stateprovince,
+                                                  self.tech_postal_code,
+                                                  self.tech_country,
+                                                  self.tech_phone,
+                                                  self.tech_phone_ext,
+                                                  self.tech_fax,
+                                                  self.tech_fax_ext,
+                                                  self.tech_email,
+                                                  self.name_server,
+                                                  self.dnssec)
+
+
 class SpiderPipeline(object):
     def __init__(self):
-        # import pdb;pdb.set_trace()
         basename = 'spider.db'
         self.engine = create_engine("sqlite:///%s" % basename, echo=False)
         if not os.path.exists(basename):
@@ -94,7 +307,10 @@ class SpiderPipeline(object):
 
     def process_item(self, item, spider):
         dom_item = item['dom_item']
+        reg_item = item['reg_item']
         who_item = item['who_item']
+
+        # import pdb;pdb.set_trace()
 
         dt = DomainTable(dom_item['domain'], dom_item['words_in_domainname'],
                          dom_item['title'], dom_item['date_creation'],
@@ -103,12 +319,18 @@ class SpiderPipeline(object):
 
         self.session.add(dt)
 
-        wt = WhoisTable(who_item['domain'], who_item['nserver'], who_item['state'],
-                            who_item['org'], who_item['registrar'], who_item['admin_contact'],
-                            who_item['created'], who_item['paid_till'], who_item['free_date'],
-                            who_item['source'])
+        rt = RegistrantTable(reg_item['name'], reg_item['organization'],
+                             reg_item['email'], reg_item['country'],
+                             reg_item['private'])
 
-        self.session.add(wt)
+        self.session.add(rt)
+
+        # wt = WhoisTable(who_item['domain'], who_item['nserver'], who_item['state'],
+        #                     who_item['org'], who_item['registrar'], who_item['admin_contact'],
+        #                     who_item['created'], who_item['paid_till'], who_item['free_date'],
+        #                     who_item['source'])
+        #
+        # self.session.add(wt)
 
         return item
 

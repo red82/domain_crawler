@@ -1,4 +1,4 @@
- # -*- coding:utf8 -*-
+# -*- coding:utf8 -*-
 from spider.items import DomainItem, WhoisItem
 # from scrapy.utils.response import open_in_browser
 import scrapy
@@ -10,7 +10,7 @@ class DomainsSpider(scrapy.Spider):
     start_urls = ['http://domainbigdata.com/']
 
     def parse(self, response):
-        url = ''.join([self.start_urls[0], 'ya.ru'])
+        url = ''.join([self.start_urls[0], 'www.google-analytics.com'])
         return [scrapy.Request(url=url, method='GET', callback=self.after_get)]
 
     def after_get(self, response):
@@ -30,7 +30,12 @@ class DomainsSpider(scrapy.Spider):
 
         data = response.xpath('//div[@class="col-md-12 pd5"]')
 
-        who_item['domain'] = data.re(r'domain:\s*([A-Za-z0-9-]+)')[0]
+        who_item['domain'] = data.re(r'domain:\s*([A-Za-z0-9-]+)')
+        if not who_item['domain']:
+            who_item['domain'] = data.re(r'Domain Name:\s*([A-Za-z0-9-]+)')[0]
+        else:
+            who_item['domain'] = who_item['domain'][0]
+
         nserver = [d[:-1] for d in data.re(r'nserver:\s*([A-Za-z0-9-.]+)')]
         who_item['nserver'] = ', '.join(nserver)
         state = data.re('state:\s*([\w\s,]*)<br>')
@@ -49,4 +54,3 @@ class DomainsSpider(scrapy.Spider):
         item['who_item'] = who_item
 
         yield item
-

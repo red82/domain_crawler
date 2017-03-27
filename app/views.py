@@ -1,7 +1,11 @@
 from app import app, db, models
 from datetime import datetime
 from forms import LookupForm
-from flask import render_template, redirect, request
+from flask import render_template, redirect, request, jsonify, abort
+
+
+class CustomException(Exception):
+    pass
 
 
 @app.route('/')
@@ -13,8 +17,9 @@ def index():
                            title='Lookup',
                            form=form)
 
-@app.route('/get_data')
+@app.route('/get_data', methods=['GET', 'POST'])
 def get_data():
+
     def splitter(str):
         return str
 
@@ -26,7 +31,8 @@ def get_data():
     if request.method == 'GET':
         raw_data = request.args['domain_list']
     elif request.method == 'POST':
-        raw_data = request.form['domain_list']
+        data = request.files["file"]
+        raw_data = data.read()
     else:
         redirect('/')
 
@@ -34,6 +40,29 @@ def get_data():
 
     db_saver(data)
 
-    return render_template('user_interface/get_data.html',
-                           title='Get data',
-                           data=data)
+    form = LookupForm()
+
+    return render_template('user_interface/lookup.html',
+                           title='Enter another domains',
+                           form=form)
+
+    # return render_template('user_interface/get_data.html',
+    #                        title='Get data',
+    #                        data=data)
+
+@app.route('/db')
+def get_domains():
+    domain = None
+    try:
+        domain = models.Request.query.order_by(models.Request.id.desc()).first()
+
+    except CustomException:
+        abort(404)
+
+    if not domain:
+        abort(404)
+
+    return jsonify({'id': domain.id,
+            'domains': domain.domains,
+            'timestamp': domain.timestamp
+    })

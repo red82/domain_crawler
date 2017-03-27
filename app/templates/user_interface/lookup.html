@@ -5,11 +5,20 @@
 {% block content %}
     <form class="form-signin" role="form" method="get" action="get_data">
         {{form.hidden_tag()}}
-        <h2 class="form-signin-heading" style="text-align: left;">LOOK UP</h2>
+        <h2 class="form-signin-heading" style="text-align: left;">{{ title }}</h2>
         <p>
             {{form.domain_list}}
             <button class="btn btn-lg btn-primary" type="submit">Search</button>
         </p>
+    </form>
+
+    <h2 class="form-signin-heading" style="text-align: left;">Or</h2>
+
+    <form enctype="multipart/form-data" method="post" action="get_data">
+        <label class="btn btn-default btn-file">
+            Browse <input type="file" name="file" style="display: none;">
+        </label>
+        <input type="submit" value="Send file" class="btn btn-primary btn-file"></p>
     </form>
 
 {% endblock %}

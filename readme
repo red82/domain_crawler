@@ -1,0 +1,6 @@
+NB:
+Befor you start this script your have to check your paths.
+If paths for app and spiders aren't set up, you have to use PYTHONPATH variable.
+Example:
+PYTHONPATH="${PYTHONPATH}:/Users/andrey/Documents/AlterEgoParsing/domain_crawler/spider/app/api/"
+export PYTHONPATH
