@@ -1,5 +1,5 @@
 # -*- coding:utf8 -*-
-from spider.items import DomainItem, WhoisItem
+from spider.items import DomainItem, WhoisItem1
 # from scrapy.utils.response import open_in_browser
 import scrapy
 
@@ -15,7 +15,7 @@ class DomainsSpider(scrapy.Spider):
 
     def after_get(self, response):
         dom_item = DomainItem()
-        who_item = WhoisItem()
+        who_item = WhoisItem1()
 
         data = response.xpath('//table[@class="websiteglobalstats em-td2 trhov"]')
 

@@ -4,10 +4,9 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
-from items import DomainItem, WhoisItem
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy.orm import Session, relationship, backref
 
 import os
 
@@ -25,6 +24,14 @@ class DomainTable(Base):
     web_age = Column(String)
     ip_address = Column(String)
     ip_geolocation = Column(String)
+
+    registrant_id = Column(Integer, ForeignKey('registrant.id'))
+    whois1_id = Column(Integer, ForeignKey('whois1.id'))
+    whois2_id = Column(Integer, ForeignKey('whois2.id'))
+
+    registrant = relationship('RegistrantTable',  back_populates='domain')
+    whois1 = relationship('WhoisTable1', back_populates='domain_table')
+    whois2 = relationship('WhoisTable2', back_populates='domain_table')
 
     def __init__(self, domain, words_in_domain, title, date_creation, web_age, ip_address, ip_geolocation):
         self.domain = domain
@@ -53,6 +60,7 @@ class RegistrantTable(Base):
     email = Column(String)
     country = Column(String)
     private = Column(String)
+    domain = relationship('DomainTable', back_populates='registrant')
 
     def __init__(self, name, organization, email, country, private):
         self.name = name
@@ -69,7 +77,7 @@ class RegistrantTable(Base):
                                         self.private)
 
 
-class Whois1Table(Base):
+class WhoisTable1(Base):
     __tablename__ = 'whois1'
     id = Column(Integer, primary_key=True)
     domain = Column(String)
@@ -82,6 +90,7 @@ class Whois1Table(Base):
     paid_till = Column(String)
     free_date = Column(String)
     source = Column(String)
+    domain_table = relationship('DomainTable', uselist=False, back_populates='whois1')
 
     def __init__(self, domain, nserver, state, org, registrar, admin_contact, created, paid_till, free_date, source):
         self.domain = domain
@@ -108,7 +117,7 @@ class Whois1Table(Base):
                                                        self.source)
 
 
-class Whois2Table(Base):
+class WhoisTable2(Base):
     __tablename__ = 'whois2'
     id = Column(Integer, primary_key=True)
     domain_name = Column(String)
@@ -164,34 +173,69 @@ class Whois2Table(Base):
     tech_email = Column(String)
     name_server = Column(String)
     dnssec = Column(String)
+    domain_table = relationship('DomainTable', uselist=False, back_populates='whois2')
 
-    def __init__(self, domain_name, registry_domain_id, registrar_whois_server,
-                 registrar_url, updated_date, creation_date,
-                 registrar_registration_expiration_date, registrar,
-                 registrar_iana_id, registrar_abuse_contact_email,
-                 registrar_abuse_contact_phone, domain_status,
-                 registry_registrant_id, registrant_name,
-                 registrant_organization, registrant_street,
-                 registrant_city, registrant_stateprovince,
-                 registrant_postal_code, registrant_country,
-                 registrant_phone, registrant_phone_ext,
-                 registrant_fax, registrant_fax_ext, registrant_email,
-                 registry_admin_id, admin_name, admin_organization,
-                 admin_street, admin_city, admin_stateprovince,
-                 admin_postal_code, admin_country, admin_phone,
-                 admin_phone_ext, admin_fax, admin_fax_ext, admin_email,
-                 registry_tech_id, tech_name, tech_organization, tech_street,
-                 tech_citytech_stateprovince, tech_postal_code, tech_country,
-                 tech_phone, tech_phone_ext, tech_fax, tech_fax_ext,
-                 tech_email, name_server, dnssec):
+    def __init__(self,
+            domain_name,
+            registry_domain_id,
+            registrar_whois_server,
+            registrar_url,
+            updated_date,
+            creation_date,
+            registrar_registration_expiration_date,
+            registrar,
+            registrar_iana_id,
+            registrar_abuse_contact_email,
+            registrar_abuse_contact_phone,
+            domain_status,
+            registry_registrant_id,
+            registrant_name,
+            registrant_organization,
+            registrant_street,
+            registrant_city,
+            registrant_stateprovince,
+            registrant_postal_code,
+            registrant_country,
+            registrant_phone,
+            registrant_phone_ext,
+            registrant_fax,
+            registrant_fax_ext,
+            registrant_email,
+            registry_admin_id,
+            admin_name,
+            admin_organization,
+            admin_street,
+            admin_city,
+            admin_stateprovince,
+            admin_postal_code,
+            admin_country,
+            admin_phone,
+            admin_phone_ext,
+            admin_fax,
+            admin_fax_ext,
+            admin_email,
+            registry_tech_id,
+            tech_name,
+            tech_organization,
+            tech_street,
+            tech_city,
+            tech_stateprovince,
+            tech_postal_code,
+            tech_country,
+            tech_phone,
+            tech_phone_ext,
+            tech_fax,
+            tech_fax_ext,
+            tech_email,
+            name_server,
+            dnssec):
         self.domain_name = domain_name
         self.registry_domain_id = registry_domain_id
         self.registrar_whois_server = registrar_whois_server
         self.registrar_url = registrar_url
         self.updated_date = updated_date
         self.creation_date = creation_date
-        self.registrar_registration_expiration_date = \
-            registrar_registration_expiration_date
+        self.registrar_registration_expiration_date = registrar_registration_expiration_date
         self.registrar = registrar
         self.registrar_iana_id = registrar_iana_id
         self.registrar_abuse_contact_email = registrar_abuse_contact_email
@@ -227,7 +271,8 @@ class Whois2Table(Base):
         self.tech_name = tech_name
         self.tech_organization = tech_organization
         self.tech_street = tech_street
-        self.tech_citytech_stateprovince = tech_citytech_stateprovince
+        self.tech_city = tech_city
+        self.tech_stateprovince = tech_stateprovince
         self.tech_postal_code = tech_postal_code
         self.tech_country = tech_country
         self.tech_phone = tech_phone
@@ -308,9 +353,7 @@ class SpiderPipeline(object):
     def process_item(self, item, spider):
         dom_item = item['dom_item']
         reg_item = item['reg_item']
-        who_item = item['who_item']
-
-        # import pdb;pdb.set_trace()
+        who_item1 = item.get('who_item1')
 
         dt = DomainTable(dom_item['domain'], dom_item['words_in_domainname'],
                          dom_item['title'], dom_item['date_creation'],
@@ -325,12 +368,72 @@ class SpiderPipeline(object):
 
         self.session.add(rt)
 
-        # wt = WhoisTable(who_item['domain'], who_item['nserver'], who_item['state'],
-        #                     who_item['org'], who_item['registrar'], who_item['admin_contact'],
-        #                     who_item['created'], who_item['paid_till'], who_item['free_date'],
-        #                     who_item['source'])
-        #
-        # self.session.add(wt)
+        if who_item1:
+            wt1 = WhoisTable1(who_item1['domain'], who_item1['nserver'],
+                              who_item1['state'], who_item1['org'],
+                              who_item1['registrar'], who_item1['admin_contact'],
+                              who_item1['created'], who_item1['paid_till'],
+                              who_item1['free_date'], who_item1['source'])
+
+            self.session.add(wt1)
+        else:
+
+            who_item2 = item.get('who_item2')
+            wt2 = WhoisTable2(who_item2['domain_name'],
+                              who_item2['registry_domain_id'],
+                              who_item2['registrar_whois_server'],
+                              who_item2['registrar_url'],
+                              who_item2['updated_date'],
+                              who_item2['creation_date'],
+                              who_item2['registrar_registration_expiration_date'],
+                              who_item2['registrar'],
+                              who_item2['registrar_iana_id'],
+                              who_item2['registrar_abuse_contact_email'],
+                              who_item2['registrar_abuse_contact_phone'],
+                              who_item2['domain_status'],
+                              who_item2['registry_registrant_id'],
+                              who_item2['registrant_name'],
+                              who_item2['registrant_organization'],
+                              who_item2['registrant_street'],
+                              who_item2['registrant_city'],
+                              who_item2['registrant_stateprovince'],
+                              who_item2['registrant_postal_code'],
+                              who_item2['registrant_country'],
+                              who_item2['registrant_phone'],
+                              who_item2['registrant_phone_ext'],
+                              who_item2['registrant_fax'],
+                              who_item2['registrant_fax_ext'],
+                              who_item2['registrant_email'],
+                              who_item2['registry_admin_id'],
+                              who_item2['admin_name'],
+                              who_item2['admin_organization'],
+                              who_item2['admin_street'],
+                              who_item2['admin_city'],
+                              who_item2['admin_stateprovince'],
+                              who_item2['admin_postal_code'],
+                              who_item2['admin_country'],
+                              who_item2['admin_phone'],
+                              who_item2['admin_phone_ext'],
+                              who_item2['admin_fax'],
+                              who_item2['admin_fax_ext'],
+                              who_item2['admin_email'],
+                              who_item2['registry_tech_id'],
+                              who_item2['tech_name'],
+                              who_item2['tech_organization'],
+                              who_item2['tech_street'],
+                              who_item2['tech_city'],
+                              who_item2['tech_stateprovince'],
+                              who_item2['tech_postal_code'],
+                              who_item2['tech_country'],
+                              who_item2['tech_phone'],
+                              who_item2['tech_phone_ext'],
+                              who_item2['tech_fax'],
+                              who_item2['tech_fax_ext'],
+                              who_item2['tech_email'],
+                              who_item2['name_server'],
+                              who_item2['dnssec'])
+
+            self.session.add(wt2)
 
         return item
 
