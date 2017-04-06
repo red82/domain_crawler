@@ -9,6 +9,7 @@ from scrapy import Item, Field
 
 
 class DomainItem(Item):
+    domain_name = Field()
     domain = Field()
     words_in_domainname = Field()
     title = Field()
@@ -16,6 +17,7 @@ class DomainItem(Item):
     web_age = Field()
     ip_address = Field()
     ip_geolocation = Field()
+    table = Field()
 
 
 class RegistrantItem(Item):

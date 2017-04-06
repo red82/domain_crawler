@@ -5,7 +5,13 @@ from spider.settings import URL_WEBUI
 import requests
 import scrapy
 import sys
+import time
+
+
 DB_API = u'/db'
+DB_WHOIS1 = u'whois1'
+DB_WHOIS2 = u'whois2'
+
 
 class CustomException(Exception):
     pass
@@ -25,8 +31,13 @@ class DomainsSpider(scrapy.Spider):
         return string.split('\n')
 
     @staticmethod
-    def connector(self, dct):
+    def connector(dct):
         return [', '.join(dct[x]) for x in dct]
+
+    @staticmethod
+    def chunks(l, n):
+        for i in xrange(0, len(l), n):
+            yield l[i:i+n]
 
     def parse(self, response):
         url = ''.join(['http://', URL_WEBUI, DB_API])
@@ -41,9 +52,17 @@ class DomainsSpider(scrapy.Spider):
             sys.exit()
         domain_name_list = response.json()['domains']
         domain_name_list = self.splitter(domain_name_list)
-        for domain_name in domain_name_list:
-            url = ''.join([self.start_urls[0], domain_name])
-            yield scrapy.Request(url=url, method='GET', callback=self.after_get)
+
+        for domain_name_chunk in self.chunks(domain_name_list, 20):
+            time.sleep(3)
+            for domain_name in domain_name_chunk:
+                url = ''.join([self.start_urls[0], domain_name])
+                request = scrapy.Request(url=url, method='GET', callback=self.after_get)
+                request.meta['domain_name'] = domain_name
+
+                # import pdb;pdb.set_trace()
+
+                yield request
 
     def after_get(self, response):
         dom_item = DomainItem()
@@ -55,6 +74,7 @@ class DomainsSpider(scrapy.Spider):
 
         data = response.xpath('//table[@class="websiteglobalstats em-td2 trhov"]')
 
+        dom_item['domain_name'] = response.meta['domain_name']
         dom_item['domain'] = data.xpath('//tr[@id="tr1"]/td[2]/text()').extract_first()
         dom_item['words_in_domainname'] = data.xpath('//tr[@id="trWordsInDomainName"]/td[2]/text()').extract_first()
         dom_item['title'] = data.xpath('//tr[@id="trTitle"]/td[2]/text()').extract_first()
@@ -69,12 +89,22 @@ class DomainsSpider(scrapy.Spider):
         reg_item['organization'] = data.xpath('//tr[@id="MainMaster_trRegistrantOrganization"]/td[2]/a/text()').extract_first()
         reg_item['email'] = data.xpath('//tr[@id="trRegistrantEmail"]/td[2]/a/text()').extract_first()
         reg_item['country'] = data.xpath('//tr[@id="trRegistrantCountry"]/td[2]/img/@alt').extract_first()
-        reg_item['private'] = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]/text()').extract()[-1]
+
+        # private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]/text()').extract()
+        # if len(private_field):
+        #     reg_item['private'] = private_field[-1]
+        #
+        # private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]/span/text()').extract()
+        # if len(private_field):
+        #     reg_item['private'] = private_field[-1]
+        reg_item['private'] = u'TEST'
 
         data = response.xpath('//div[@class="col-md-12 pd5"]')
         domain_field = data.re(r'domain:\s*([A-Za-z0-9-]+)')
 
         if domain_field:
+            dom_item['table'] = DB_WHOIS1
+
             who_item1 = WhoisItem1()
             item['who_item1'] = who_item1
 
@@ -94,6 +124,8 @@ class DomainsSpider(scrapy.Spider):
             for who_item in who_item1:
                 who_item1[who_item] = ', '.join(who_item1[who_item])
         else:
+            dom_item['table'] = DB_WHOIS2
+
             who_item2 = WhoisItem2()
             item['who_item2'] = who_item2
 
