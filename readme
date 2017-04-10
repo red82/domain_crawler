@@ -4,5 +4,5 @@ If paths for app and spiders aren't set up, you have to use PYTHONPATH variable.
 You have create path to your project "/home/username/.../domain_crawler"
 
 Example:
-PYTHONPATH="${PYTHONPATH}: ~/domain_crawler"
-export PYTHONPATH
+PATH=${PATH}:"~/domain_crawler"
+export PATH
