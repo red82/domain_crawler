@@ -1,10 +1,9 @@
-# 2017.03.27 13:16:33 EEST
-#Embedded file name: /Users/andrey/Documents/AlterEgoParsing/domain_crawler/spider/spider/spiders/domains_spider_1.py
 from spider.items import DomainItem, RegistrantItem, WhoisItem1, WhoisItem2
 from spider.settings import URL_WEBUI
-import requests
+
+import os
+import inspect
 import scrapy
-import sys
 import time
 
 
@@ -12,27 +11,29 @@ DB_API = u'/db'
 DB_WHOIS1 = u'whois1'
 DB_WHOIS2 = u'whois2'
 
+INPUT_FILE = 'domains.txt'
+
 
 class CustomException(Exception):
     pass
 
 
 class DomainsSpider(scrapy.Spider):
-    name = 'domain_spider_1'
+    name = 'domain_spider_2'
     allowed_domains = ['domainbigdata.com']
     start_urls = ['http://domainbigdata.com/']
 
-    @staticmethod
-    def convert_to_list(self, string):
-        pass
+    def __init__(self):
+        super(scrapy.Spider, self).__init__()
+        current_path_directory = \
+            os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        root_path_directory = '/'.join(current_path_directory.split('/')[:-1])
+        self.current_path_file = '/'.join((root_path_directory, 'Temp',
+                                           INPUT_FILE))
 
     @staticmethod
-    def splitter(string):
-        return string.split('\n')
-
-    @staticmethod
-    def connector(dct):
-        return [', '.join(dct[x]) for x in dct]
+    def cutter(lst):
+        return [domain[:-1] for domain in lst]
 
     @staticmethod
     def chunks(l, n):
@@ -40,19 +41,10 @@ class DomainsSpider(scrapy.Spider):
             yield l[i:i+n]
 
     def parse(self, response):
-        url = ''.join(['http://', URL_WEBUI, DB_API])
-        try:
-            response = requests.get(url)
-        except Exception:
-            print "Couldn't send request to server."
-            sys.exit()
+        with open(self.current_path_file) as f:
+            domain_name_list = f.readlines()
 
-        if response.status_code != 200:
-            print 'Exception!!! Status code is %s' % response.status_code
-            sys.exit()
-
-        domain_name_list = response.json()['domains']
-        domain_name_list = self.splitter(domain_name_list)
+        domain_name_list = self.cutter(domain_name_list)
 
         for domain_name_chunk in self.chunks(domain_name_list, 20):
             time.sleep(3)
@@ -60,8 +52,6 @@ class DomainsSpider(scrapy.Spider):
                 url = ''.join([self.start_urls[0], domain_name])
                 request = scrapy.Request(url=url, method='GET', callback=self.after_get)
                 request.meta['domain_name'] = domain_name
-
-                # import pdb;pdb.set_trace()
 
                 yield request
 
@@ -98,6 +88,8 @@ class DomainsSpider(scrapy.Spider):
         # private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]/span/text()').extract()
         # if len(private_field):
         #     reg_item['private'] = private_field[-1]
+
+
         reg_item['private'] = u'TEST'
 
         data = response.xpath('//div[@class="col-md-12 pd5"]')
@@ -218,3 +210,4 @@ class DomainsSpider(scrapy.Spider):
                 who_item2[who_item] = ', '.join(who_item2[who_item])
 
         yield item
+
