@@ -15,12 +15,13 @@ SPIDER_NAME = 'domain_spider_2'
 def run_crawler(spiderName):
     sub = subprocess.Popen('scrapy crawl %s ' % (spiderName,), shell=True,
                            cwd=spider_launch_directory)
-    import pdb;pdb.set_trace()
+    # import pdb;pdb.set_trace()
     # sub.wait(timeout=10)
     # sub.kill()
 
     return True
 
+# import pdb;pdb.set_trace()
 
 current_path_directory = \
     os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))

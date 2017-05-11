@@ -33,8 +33,8 @@ class DomainTable(Base):
     whois1 = relationship('WhoisTable1', back_populates='domain_table')
     whois2 = relationship('WhoisTable2', back_populates='domain_table')
 
-    def __init__(self, domain_name, domain, words_in_domain, title, date_creation, web_age,
-                 ip_address, ip_geolocation, table, registrant_id):
+    def __init__(self, domain_name, domain, words_in_domain, title,
+                 date_creation, web_age, ip_address, ip_geolocation, table):
         self.domain_name = domain_name
         self.domain = domain
         self.words_in_domainname = words_in_domain
@@ -44,10 +44,9 @@ class DomainTable(Base):
         self.ip_address = ip_address
         self.ip_geolocation = ip_geolocation
         self.table = table
-        self.registrant_id = registrant_id
 
     def __repr__(self):
-        return 'Data %s %s %s %s %s %s %s %s %s %s' % (self.domain_name,
+        return 'Data %s %s %s %s %s %s %s %s %s' % (self.domain_name,
                                                        self.domain,
                                                        self.words_in_domainname,
                                                        self.title,
@@ -55,8 +54,7 @@ class DomainTable(Base):
                                                        self.web_age,
                                                        self.ip_address,
                                                        self.ip_geolocation,
-                                                       self.table,
-                                                       self.registrant_id)
+                                                       self.table)
 
 
 class RegistrantTable(Base):
@@ -103,7 +101,7 @@ class WhoisTable1(Base):
     domain_table = relationship('DomainTable', uselist=False, back_populates='whois1')
 
     def __init__(self, domain, nserver, state, org, registrar, admin_contact,
-                 created, paid_till, free_date, source, domain_table_id):
+                 created, paid_till, free_date, source):
         self.domain = domain
         self.nserver = nserver
         self.state = state
@@ -114,10 +112,9 @@ class WhoisTable1(Base):
         self.paid_till = paid_till
         self.free_date = free_date
         self.source = source
-        self.domain_table_id = domain_table_id
 
     def __repr__(self):
-        return 'Data %s %s %s %s %s %s %s %s %s %s %s' % (self.domain,
+        return 'Data %s %s %s %s %s %s %s %s %s %s' % (self.domain,
                                                        self.nserver,
                                                        self.state,
                                                        self.org,
@@ -126,8 +123,7 @@ class WhoisTable1(Base):
                                                        self.created,
                                                        self.paid_till,
                                                        self.free_date,
-                                                       self.source,
-                                                       self.domain_table_id)
+                                                       self.source)
 
 
 class WhoisTable2(Base):
@@ -243,8 +239,7 @@ class WhoisTable2(Base):
             tech_fax_ext,
             tech_email,
             name_server,
-            dnssec,
-            domain_table_id):
+            dnssec):
         self.domain_name = domain_name
         self.registry_domain_id = registry_domain_id
         self.registrar_whois_server = registrar_whois_server
@@ -298,10 +293,9 @@ class WhoisTable2(Base):
         self.tech_email = tech_email
         self.name_server = name_server
         self.dnssec = dnssec
-        self.domain_table_id = domain_table_id
 
     def __repr__(self):
-        return 'Data %s %s %s %s %s %s %s %s %s %s ' \
+        return 'Data %s %s %s %s %s %s %s %s %s ' \
                '%s %s %s %s %s %s %s %s %s %s %s' \
                '%s %s %s %s %s %s %s %s %s %s %s' \
                '%s %s %s %s %s %s %s %s %s %s %s' \
@@ -357,8 +351,7 @@ class WhoisTable2(Base):
                                                   self.tech_fax_ext,
                                                   self.tech_email,
                                                   self.name_server,
-                                                  self.dnssec,
-                                                  self.domain_table_id)
+                                                  self.dnssec)
 
 
 class SpiderPipeline(object):
@@ -368,37 +361,58 @@ class SpiderPipeline(object):
         if not os.path.exists(basename):
             Base.metadata.create_all(self.engine)
 
+    @staticmethod
+    def dictionary_checker(dictionary):
+        """ Check dictionary. If all elements are None or empty list, function
+         return True otherwise return False.
+        :param dictionary: data type is dict
+        :return: Boolean
+        """
+        value_list = []
+        for value in dictionary.values():
+            value_list.append(value)
+
+        value_set = set(value_list)
+        if len(value_set) == 1:
+            value_list = list(value_set)
+            if (value_list[0] is None) or (value_list[0] == []):
+                return True
+        return False
+
     def process_item(self, item, spider):
         dom_item = item['dom_item']
         reg_item = item['reg_item']
         who_item1 = item.get('who_item1')
+        who_item2 = item.get('who_item2')
 
-        rt = RegistrantTable(reg_item['name'], reg_item['organization'],
-                             reg_item['email'], reg_item['country'],
-                             reg_item['private'])
+        if not self.dictionary_checker(dom_item):
+            dt = DomainTable(dom_item['domain_name'], dom_item['domain'],
+                             dom_item['words_in_domainname'],
+                             dom_item['title'], dom_item['date_creation'],
+                             dom_item['web_age'], dom_item['ip_address'],
+                             dom_item['ip_geolocation'], dom_item['table'])
+        else:
+            return item
 
-        dt = DomainTable(dom_item['domain_name'], dom_item['domain'],
-                         dom_item['words_in_domainname'],
-                         dom_item['title'], dom_item['date_creation'],
-                         dom_item['web_age'], dom_item['ip_address'],
-                         dom_item['ip_geolocation'], dom_item['table'],
-                         registrant_id=rt.id)
+        if not self.dictionary_checker(reg_item):
+            rt = RegistrantTable(reg_item['name'], reg_item['organization'],
+                                 reg_item['email'], reg_item['country'],
+                                 reg_item['private'])
 
-        self.session.add(rt)
-        self.session.add(dt)
+            rt.domain.append(dt)
+            self.session.add(rt)
 
-        if who_item1:
+        if who_item1 and not self.dictionary_checker(who_item1):
             wt1 = WhoisTable1(who_item1['domain'], who_item1['nserver'],
                               who_item1['state'], who_item1['org'],
                               who_item1['registrar'], who_item1['admin_contact'],
                               who_item1['created'], who_item1['paid_till'],
-                              who_item1['free_date'], who_item1['source'],
-                              domain_table_id=dt.id)
+                              who_item1['free_date'], who_item1['source'])
 
+            dt.whois1.append(wt1)
             self.session.add(wt1)
 
-        else:
-            who_item2 = item.get('who_item2')
+        elif who_item2 and not self.dictionary_checker(who_item2):
             wt2 = WhoisTable2(who_item2['domain_name'],
                               who_item2['registry_domain_id'],
                               who_item2['registrar_whois_server'],
@@ -451,11 +465,12 @@ class SpiderPipeline(object):
                               who_item2['tech_fax_ext'],
                               who_item2['tech_email'],
                               who_item2['name_server'],
-                              who_item2['dnssec'],
-                              domain_table_id=dt.id)
+                              who_item2['dnssec'])
 
+            dt.whois2.append(wt2)
             self.session.add(wt2)
 
+        self.session.add(dt)
         return item
 
     def close_spider(self, spider):

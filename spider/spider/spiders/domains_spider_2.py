@@ -1,15 +1,17 @@
+# -*- coding: utf-8
 from spider.items import DomainItem, RegistrantItem, WhoisItem1, WhoisItem2
 from spider.settings import URL_WEBUI
 
 import os
 import inspect
+import re
 import scrapy
-import time
-
 
 DB_API = u'/db'
 DB_WHOIS1 = u'whois1'
 DB_WHOIS2 = u'whois2'
+
+PATTERN_NO = r'^(<td\s[\w\d\s.=\'\"\>]+)no'
 
 INPUT_FILE = 'domains.txt'
 
@@ -43,17 +45,14 @@ class DomainsSpider(scrapy.Spider):
     def parse(self, response):
         with open(self.current_path_file) as f:
             domain_name_list = f.readlines()
-
         domain_name_list = self.cutter(domain_name_list)
 
-        for domain_name_chunk in self.chunks(domain_name_list, 20):
-            time.sleep(3)
-            for domain_name in domain_name_chunk:
-                url = ''.join([self.start_urls[0], domain_name])
-                request = scrapy.Request(url=url, method='GET', callback=self.after_get)
-                request.meta['domain_name'] = domain_name
+        for domain_name in domain_name_list:
+            url = ''.join([self.start_urls[0], domain_name])
+            request = scrapy.Request(url=url, method='GET', callback=self.after_get, dont_filter=True)
+            request.meta['domain_name'] = domain_name
 
-                yield request
+            yield request
 
     def after_get(self, response):
         dom_item = DomainItem()
@@ -81,16 +80,21 @@ class DomainsSpider(scrapy.Spider):
         reg_item['email'] = data.xpath('//tr[@id="trRegistrantEmail"]/td[2]/a/text()').extract_first()
         reg_item['country'] = data.xpath('//tr[@id="trRegistrantCountry"]/td[2]/img/@alt').extract_first()
 
-        # private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]/text()').extract()
-        # if len(private_field):
-        #     reg_item['private'] = private_field[-1]
-        #
-        # private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]/span/text()').extract()
-        # if len(private_field):
-        #     reg_item['private'] = private_field[-1]
+        try:
+            private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]').extract()
+        except Exception as e:
+            print "Couldn't get data from 'Private' field. %s" % e,
+            private_field = []
 
-
-        reg_item['private'] = u'TEST'
+        if len(private_field):
+            private_field = private_field[-1]
+            m = re.match(PATTERN_NO, private_field)
+            if m:
+                reg_item['private'] = 'no'
+            else:
+                reg_item['private'] = 'yes'
+        else:
+            reg_item['private'] = None
 
         data = response.xpath('//div[@class="col-md-12 pd5"]')
         domain_field = data.re(r'domain:\s*([A-Za-z0-9-]+)')
@@ -210,4 +214,3 @@ class DomainsSpider(scrapy.Spider):
                 who_item2[who_item] = ', '.join(who_item2[who_item])
 
         yield item
-

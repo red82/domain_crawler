@@ -2,6 +2,8 @@
 #Embedded file name: /Users/andrey/Documents/AlterEgoParsing/domain_crawler/spider/spider/spiders/domains_spider_1.py
 from spider.items import DomainItem, RegistrantItem, WhoisItem1, WhoisItem2
 from spider.settings import URL_WEBUI
+
+import re
 import requests
 import scrapy
 import sys
@@ -11,6 +13,8 @@ import time
 DB_API = u'/db'
 DB_WHOIS1 = u'whois1'
 DB_WHOIS2 = u'whois2'
+
+PATTERN_NO = r'^(<td\s[\w\d\s.=\'\"\>]+)no'
 
 
 class CustomException(Exception):
@@ -61,8 +65,6 @@ class DomainsSpider(scrapy.Spider):
                 request = scrapy.Request(url=url, method='GET', callback=self.after_get)
                 request.meta['domain_name'] = domain_name
 
-                # import pdb;pdb.set_trace()
-
                 yield request
 
     def after_get(self, response):
@@ -91,14 +93,21 @@ class DomainsSpider(scrapy.Spider):
         reg_item['email'] = data.xpath('//tr[@id="trRegistrantEmail"]/td[2]/a/text()').extract_first()
         reg_item['country'] = data.xpath('//tr[@id="trRegistrantCountry"]/td[2]/img/@alt').extract_first()
 
-        # private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]/text()').extract()
-        # if len(private_field):
-        #     reg_item['private'] = private_field[-1]
-        #
-        # private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]/span/text()').extract()
-        # if len(private_field):
-        #     reg_item['private'] = private_field[-1]
-        reg_item['private'] = u'TEST'
+        try:
+            private_field = data[1].xpath('//table[@class="websiteglobalstats em-td2 trhov"]/tr/td[2]').extract()
+        except Exception as e:
+            print "Couldn't get data from 'Private' field"
+            private_field = []
+
+        if len(private_field):
+            private_field = private_field[-1]
+            m = re.match(PATTERN_NO, private_field)
+            if m:
+                reg_item['private'] = 'no'
+            else:
+                reg_item['private'] = 'yes'
+        else:
+            reg_item['private'] = None
 
         data = response.xpath('//div[@class="col-md-12 pd5"]')
         domain_field = data.re(r'domain:\s*([A-Za-z0-9-]+)')

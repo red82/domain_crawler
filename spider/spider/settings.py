@@ -8,6 +8,9 @@
 #     http://doc.scrapy.org/en/latest/topics/settings.html
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
+import os
+import inspect
+
 
 BOT_NAME = 'spider'
 
@@ -22,18 +25,18 @@ NEWSPIDER_MODULE = 'spider.spiders'
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 16
 
 CONCURRENT_ITEMS = 1000
 
-DOWNLOAD_TIMEOUT = 360
+DOWNLOAD_TIMEOUT = 300
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 5.0
 # The download delay setting will honor only one of:
-#CONCURRENT_REQUESTS_PER_DOMAIN = 16
+CONCURRENT_REQUESTS_PER_DOMAIN = 3
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
@@ -94,3 +97,40 @@ URL_WEBUI = u'localhost:5000'
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+# < ----------------------------------------------------------------------- >
+
+# SOCKS_PROXY_FILE_NAME = 'http_proxy_list.txt'
+#
+# current_path_directory = \
+#     os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+# root_path_directory = '/'.join(current_path_directory.split('/')[:-2])
+#
+# path_socks_proxy_file = '/'.join((root_path_directory, SOCKS_PROXY_FILE_NAME))
+#
+# # Retry many times since proxies often fail
+# RETRY_TIMES = 10
+# # Retry on most error codes since proxies fail for different reasons
+# RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
+#
+# DOWNLOADER_MIDDLEWARES = {
+#     'scrapy.downloadermiddlewares.retry.RetryMiddleware': 90,
+#     'scrapy_proxies.RandomProxy': 100,
+#     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
+# }
+#
+# # Proxy list containing entries like
+# # http://host1:port
+# # http://username:password@host2:port
+# # http://host3:port
+# # ...
+# PROXY_LIST = path_socks_proxy_file
+#
+# # Proxy mode
+# # 0 = Every requests have different proxy
+# # 1 = Take only one proxy from the list and assign it to every requests
+# # 2 = Put a custom proxy to use in the settings
+# PROXY_MODE = 0
+#
+# # If proxy mode is 2 uncomment this sentence :
+# #CUSTOM_PROXY = "http://host1:port"
